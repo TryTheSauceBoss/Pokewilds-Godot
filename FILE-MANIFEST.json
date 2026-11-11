@@ -1,5 +1,5 @@
 {
-"snapshot": "fixes171",
+"snapshot": "fixes172",
 "files": [
 {
 "path": ".gitignore",
@@ -87773,8 +87773,8 @@
 },
 {
 "path": "project/scripts/coop_build_runtime.gd",
-"bytes": 34382,
-"sha256": "91a5b804746ec8f3c6a782169c056f6df2d181b92d8253aac51dd433348018ab"
+"bytes": 35898,
+"sha256": "dacb927ad89be2cce57841c790c15883360d2e930cf5c03a49f5ccbb1a5e8a9c"
 },
 {
 "path": "project/scripts/coop_build_runtime.gd.uid",
@@ -88408,8 +88408,8 @@
 },
 {
 "path": "project/scripts/main.gd",
-"bytes": 634264,
-"sha256": "fde10e734a458a73b9c037a19cf1250e5b2f4faf652cc50522e225c6f38f16b4"
+"bytes": 634671,
+"sha256": "8a5e389442e79370b934c34aff033421810db86893d247ac49aa26ad5297c797"
 },
 {
 "path": "project/scripts/main.gd.uid",
@@ -89188,8 +89188,8 @@
 },
 {
 "path": "project/scripts/world.gd",
-"bytes": 113858,
-"sha256": "0ae37da74fb856a75b70aeacc20605daf0d75128517abae1550409f1b50d59d0"
+"bytes": 114438,
+"sha256": "ddc702e086b9847d83ec2412160597f1d48634e442914a27a73b62547fe375b1"
 },
 {
 "path": "project/scripts/world.gd.uid",
@@ -89198,8 +89198,8 @@
 },
 {
 "path": "project/scripts/world_base_m74_3_9_14.gd",
-"bytes": 575352,
-"sha256": "065501f420dede3aa97f3e15d006855f43cc8e2c09fb964e290605bda8b809e8"
+"bytes": 581463,
+"sha256": "683d39fbd61ad78cad5723767f49cb264f75cbc6bbd757a3cdbeb6445ed58c52"
 },
 {
 "path": "project/scripts/world_base_m74_3_9_14.gd.uid",

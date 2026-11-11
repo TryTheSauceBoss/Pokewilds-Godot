@@ -12219,6 +12219,12 @@ func _on_structure_action(action: String) -> void:
         if parts.size() != 3:
             return
         var cell := Vector2i(int(parts[1]), int(parts[2]))
+        # In a shared world the opened door is opened for every player, and
+        # the host records it, so it stays open for players who join later.
+        if is_instance_valid(coop_game) and coop_game.active:
+            if not await coop_game.building.share_tile_change(cell, {"kind": "MANSION_DOOR"}):
+                _show_message("The door would not open. Try again.")
+                return
         if world.unlock_mansion_door(cell):
             inventory["SECRET KEY"] = int(inventory.get("SECRET KEY", 0)) - 1
             _show_message("The SECRET KEY opened the door!")

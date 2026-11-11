@@ -13,6 +13,32 @@ var field_rewards:Dictionary={}
 var field_choice:=""
 var field_encounter:Dictionary={}
 
+## One change to one tile that every player must share, such as the host
+## taking the mansion key or any player opening the mansion door. It goes to
+## the host like a dig, and the host refuses it if that tile was changed
+## first by someone else. `rewards` are granted by the host.
+func share_tile_change(cell:Vector2i,mutation:Dictionary,rewards:Dictionary={})->bool:
+    if busy or game._request_busy:last_result={"ok":false,"reason":"busy"};return false
+    busy=true
+    var world=game.main.world
+    var key:String=world._cell_key(cell)
+    var before=Delta.flatten(capture_cut([cell]))
+    var previous=world.source_interior_mutations.get(key)
+    world.source_interior_mutations[key]=mutation.duplicate(true)
+    var after=Delta.flatten(capture_cut([cell]))
+    if previous==null:world.source_interior_mutations.erase(key)
+    else:world.source_interior_mutations[key]=previous
+    var patches=Delta.diff(before,after)
+    var known:Dictionary=game.state.records if game.hosting else game.shared_records
+    for change in patches:
+        change["before"]=game.state.fingerprint(known.get("world/"+game._area()+"/"+String(change.key),Delta.encode(null)))
+    var result:Dictionary=await game.command("field_dig",{"area":game._area(),"patches":patches,"rewards":rewards,"choice":""})
+    last_result=result.duplicate(true)
+    busy=false
+    if not result.get("ok",false):return false
+    if not rewards.is_empty():game.main._on_dig_reward_collected(rewards,false)
+    return true
+
 func collect(items:Dictionary)->bool:
     if not collecting:return false
     for item in items:field_rewards[item]=int(field_rewards.get(item,0))+int(items[item])

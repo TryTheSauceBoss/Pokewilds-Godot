@@ -1023,8 +1023,57 @@ func _register_exact_exterior_interactables() -> void:
                 target_layer, cell.x, cell.y
             ]
 
+    _clear_door_fronts()
     if exact_world != null:
         exact_world.set_meta("unown_generated_signs", unown_generated_signs)
+
+## Nothing may stand in front of a door: generation can leave a cliff edge,
+## ledge, rock, tree, berry tree or bush there (seen at the mansion), and
+## players should never have to think of CUT or DIG to get in. Doors face down
+## the screen (the map is flipped from the source's y-up layout), so the tile
+## below a door is its front. Every player regenerates the same map, so all
+## players make the same change.
+func _clear_door_fronts() -> void:
+    if exact_world == null:
+        return
+    for raw_tile in exact_world.tiles.values():
+        var door := raw_tile as SourceTile
+        if door == null:
+            continue
+        var names := door.name + " " + door.name_upper
+        if "door" not in names and door.name_upper != "pkmnmansion_ext_locked":
+            continue
+        var door_cell := SourceWorldData.pixel_to_cell(door.position)
+        var building := (door.name_upper if not door.name_upper.is_empty() else door.name).get_slice("_", 0)
+        var front_cell := door_cell + Vector2i(0, 1)
+        var front := exact_world.tile_at(front_cell)
+        if front == null or _part_of_building(front, building):
+            continue
+        var ground := door.name if not door.name.is_empty() and "door" not in door.name else "sand1"
+        _clear_door_tile(front, ground)
+        # Big trees, berry trees and savanna trees cover more than one tile:
+        # remove the rest of anything that still blocks the front tile.
+        if exact_world.is_solid(front_cell):
+            for dy in range(-1, 2):
+                for dx in range(-1, 2):
+                    var near := exact_world.tile_at(front_cell + Vector2i(dx, dy))
+                    if near == null or near == front or near == door or _part_of_building(near, building):
+                        continue
+                    if near.name_upper.is_empty() and not near.is_solid:
+                        continue
+                    _clear_door_tile(near, near.name if not (near.is_solid or near.is_ledge or near.is_water or near.is_lava) else ground)
+
+func _part_of_building(tile: SourceTile, building: String) -> bool:
+    return not building.is_empty() and (tile.name_upper.begins_with(building) or tile.name.begins_with(building))
+
+func _clear_door_tile(tile: SourceTile, ground: String) -> void:
+    var base_blocks := tile.is_ledge or tile.is_water or tile.is_lava or \
+        SourceWorldData.is_upper_solid(tile.name) or SourceWorldData.ledge_direction(tile.name) != Vector2i.ZERO
+    tile.set_names(ground if base_blocks else tile.name, "")
+    if tile.is_solid or tile.is_cuttable or tile.is_headbuttable:
+        tile.set_names(ground, "")
+    tile.has_item = ""
+    tile.has_item_amount = 0
 
 func _spawn_location_npcs() -> void:
     if not exact_world_mode or exact_world == null:
@@ -2137,7 +2186,13 @@ func _build_generated_source_interiors(
         source_area_layers[area_id] = area_layer
         var tiles: Dictionary = plan.get("tiles", {})
         var solids: Dictionary = plan.get("solids", {})
-        for raw_local_cell in tiles.keys():
+        # Tall furniture (statues, shelves, potted plants) reaches up into the
+        # row above and shares one draw layer, so the order sprites are added
+        # decides which is on top. Add rows top to bottom: a statue standing in
+        # front of a plant pot then draws over the pot, not under it.
+        var ordered_cells: Array = tiles.keys()
+        ordered_cells.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.y < b.y or (a.y == b.y and a.x < b.x))
+        for raw_local_cell in ordered_cells:
             if cooperative and Time.get_ticks_usec() - slice_started >= 4000:
                 await get_tree().process_frame
                 slice_started = Time.get_ticks_usec()
@@ -4001,6 +4056,26 @@ func _interact_in_front() -> void:
         elif kind == "source_key":
             if bool(data.get("used", false)):
                 world_message.emit("There is nothing else here.")
+                return
+            var coordinator = get_parent().get("coop_game")
+            if is_instance_valid(coordinator) and coordinator.active and not coordinator.hosting:
+                # A guest takes a key of their own and the key stays where it
+                # is: the world's key belongs to the host, so a guest cannot
+                # walk in, take it and leave with it.
+                if int(get_parent().inventory.get("SECRET KEY", 0)) > 0:
+                    world_message.emit("You already have the MANSION KEY.")
+                    return
+                item_collected.emit(String(data.get("item", "MANSION KEY")))
+                world_message.emit("You found the MANSION KEY!")
+                return
+            if is_instance_valid(coordinator) and coordinator.active:
+                # The host's key is recorded with the world, so it stays taken
+                # for the host. Guests still find a key there for themselves.
+                if await coordinator.building.share_tile_change(target, {"kind": "MANSION_KEY_TAKEN"}, {"SECRET KEY": 1}):
+                    _take_mansion_key(target)
+                    world_message.emit("You found the MANSION KEY!")
+                else:
+                    world_message.emit("Try again in a moment.")
                 return
             data["used"] = true
             landmarks[target] = data
@@ -9871,6 +9946,23 @@ func can_awaken_regi(species_name: String) -> bool:
         and not (event_progress.get("regis_caught", []) as Array).has(species)
     )
 
+## Takes the mansion key off the map for the player who picked it up: in a
+## shared world, the host. Guests each take a key of their own and it stays.
+func _take_mansion_key(cell: Vector2i) -> void:
+    var data: Dictionary = landmarks.get(cell, {})
+    if String(data.get("type", "")) != "source_key":
+        return
+    data["used"] = true
+    landmarks[cell] = data
+    var key_sprite := data.get("sprite") as Sprite2D
+    if is_instance_valid(key_sprite):
+        key_sprite.visible = false
+    var key_collision := data.get("collision") as CollisionShape2D
+    if is_instance_valid(key_collision):
+        key_collision.queue_free()
+    blocked.erase(cell)
+    source_interior_mutations[_cell_key(cell)] = {"kind": "MANSION_KEY_TAKEN"}
+
 func unlock_mansion_door(cell: Vector2i) -> bool:
     if not exact_world_mode or exact_world == null:
         return false
@@ -9921,6 +10013,13 @@ func _apply_source_interior_mutation(cell: Vector2i, mutation: Dictionary) -> vo
         SourceMansionRuntime.set_gate(self, cell, String(mutation.get("name", "")))
         return
     if kind == "COLLECTED":
+        # The host taking the mansion key leaves a key for each guest.
+        var key_owner = get_parent().get("coop_game")
+        if is_instance_valid(key_owner) and key_owner.active and not key_owner.hosting \
+                and exact_world_mode and exact_world != null and exact_world.contains_cell(cell):
+            var key_tile := exact_world.tile_at(cell)
+            if key_tile != null and key_tile.name_upper == "pokemon_mansion_key":
+                return
         SourceMansionRuntime.clear_collected_item(self, cell)
         SourceMineRuntime.clear_collected_item(self, cell)
         interior_interactables.erase(cell)
@@ -9935,6 +10034,12 @@ func _apply_source_interior_mutation(cell: Vector2i, mutation: Dictionary) -> vo
                 collected_tile.has_item_amount = 0
                 collected_tile.set_names(collected_tile.name, "")
                 _refresh_exact_streams()
+        return
+    if kind == "MANSION_KEY_TAKEN":
+        # Only the host's own key is gone. Guests always find a key there.
+        var coordinator = get_parent().get("coop_game")
+        if not (is_instance_valid(coordinator) and coordinator.active and not coordinator.hosting):
+            _take_mansion_key(cell)
         return
     if kind == "MANSION_DOOR":
         var locked_tile := exact_world.tile_at(cell) if exact_world != null else null
