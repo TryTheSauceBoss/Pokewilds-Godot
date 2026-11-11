@@ -39,6 +39,24 @@ func share_tile_change(cell:Vector2i,mutation:Dictionary,rewards:Dictionary={})-
     if not rewards.is_empty():game.main._on_dig_reward_collected(rewards,false)
     return true
 
+## Several tile changes that every player must share at once, such as the
+## gates a mansion statue opens and closes. `mutations` maps each cell to its
+## new record. They are already shown on this player's screen.
+func share_mutations(mutations:Dictionary)->bool:
+    if mutations.is_empty():return true
+    if busy or game._request_busy:last_result={"ok":false,"reason":"busy"};return false
+    busy=true
+    var world=game.main.world
+    var known:Dictionary=game.state.records if game.hosting else game.shared_records
+    var patches:Array=[]
+    for cell in mutations:
+        var key:String="source_interior_mutations/"+String(world._cell_key(cell)).uri_encode()
+        patches.append({"key":key,"before":game.state.fingerprint(known.get("world/"+game._area()+"/"+key,Delta.encode(null))),"after":Delta.encode(mutations[cell])})
+    var result:Dictionary=await game.command("field_dig",{"area":game._area(),"patches":patches,"rewards":{},"choice":""})
+    last_result=result.duplicate(true)
+    busy=false
+    return result.get("ok",false)
+
 func collect(items:Dictionary)->bool:
     if not collecting:return false
     for item in items:field_rewards[item]=int(field_rewards.get(item,0))+int(items[item])

@@ -1,5 +1,5 @@
 {
-"snapshot": "fixes173",
+"snapshot": "fixes174",
 "files": [
 {
 "path": ".gitignore",
@@ -87993,8 +87993,8 @@
 },
 {
 "path": "project/scripts/coop_build_runtime.gd",
-"bytes": 35898,
-"sha256": "dacb927ad89be2cce57841c790c15883360d2e930cf5c03a49f5ccbb1a5e8a9c"
+"bytes": 36964,
+"sha256": "abad6fca605959a3f923b5cfd8df8d19aa3148bcc0df12bdc9a3f351442356a3"
 },
 {
 "path": "project/scripts/coop_build_runtime.gd.uid",
@@ -88628,8 +88628,8 @@
 },
 {
 "path": "project/scripts/main.gd",
-"bytes": 634671,
-"sha256": "8a5e389442e79370b934c34aff033421810db86893d247ac49aa26ad5297c797"
+"bytes": 635556,
+"sha256": "68fa66cd5e5bf9635247ac2dc5ec22763cdcf982a8680dac396e1ec7f54daa09"
 },
 {
 "path": "project/scripts/main.gd.uid",
@@ -89113,8 +89113,8 @@
 },
 {
 "path": "project/scripts/source_mansion_runtime.gd",
-"bytes": 4483,
-"sha256": "8bed6fa48e4636312f75ae2f8c5115105a28f8b038db13affcc4f3867ee7a455"
+"bytes": 4576,
+"sha256": "ce56c3fe39690cdfb3f2d5f395d0d8e594636e315f464d377c00293092349a7b"
 },
 {
 "path": "project/scripts/source_mansion_runtime.gd.uid",
@@ -89143,8 +89143,8 @@
 },
 {
 "path": "project/scripts/source_mewtwo_battle.gd",
-"bytes": 9844,
-"sha256": "2c56440ddf240d74c9804a406f1d14ffd6bfa216dde3ad50db90c6b4bb4318cc"
+"bytes": 10697,
+"sha256": "e05feac62e5bc5dddf1b852b4a74c1e3ea450b81e08e90efd3eed40986b6230f"
 },
 {
 "path": "project/scripts/source_mewtwo_battle.gd.uid",
@@ -89418,8 +89418,8 @@
 },
 {
 "path": "project/scripts/world_base_m74_3_9_14.gd",
-"bytes": 581463,
-"sha256": "683d39fbd61ad78cad5723767f49cb264f75cbc6bbd757a3cdbeb6445ed58c52"
+"bytes": 591211,
+"sha256": "a28b7076849547d21c89c524c9184cc024f082b67ef6e243f55f2e147614a8cd"
 },
 {
 "path": "project/scripts/world_base_m74_3_9_14.gd.uid",
