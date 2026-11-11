@@ -1,10 +1,10 @@
 {
-"snapshot": "fixes174",
+"snapshot": "fixes175",
 "files": [
 {
 "path": ".gitignore",
-"bytes": 422,
-"sha256": "804b4247ad07b71b0f2b18a555a6f768c030bb7bb4ece9225624531ae40e1f6c"
+"bytes": 440,
+"sha256": "478c34955f60e6482e89680f26d2adb8d7f94213e2114448a959c08b8973be62"
 },
 {
 "path": "BUILD.txt",
@@ -88133,8 +88133,8 @@
 },
 {
 "path": "project/scripts/coop_network.gd",
-"bytes": 6786,
-"sha256": "dc5033ac7ae19fd94c3147b412c42f2d963974d71607fae1c50319b1f96a675c"
+"bytes": 7110,
+"sha256": "fe43463175c11271aeaa6073e593c24326c26c0fbea0096c911ff7a3717d4b35"
 },
 {
 "path": "project/scripts/coop_network.gd.uid",
