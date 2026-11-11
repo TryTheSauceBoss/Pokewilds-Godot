@@ -1,5 +1,5 @@
 {
-"snapshot": "fixes172",
+"snapshot": "fixes173",
 "files": [
 {
 "path": ".gitignore",
@@ -17817,6 +17817,16 @@
 "sha256": "576a50920b39ba35c92af5fc3c71a710f22a1392443bc02709ad82babc173e54"
 },
 {
+"path": "project/assets/divinakra_megas/mega_blastoise-menu-shiny.png",
+"bytes": 1296,
+"sha256": "942f42ee984147d06098d33b21c93e722b83f45a4236b7af9fe211e343d65ab9"
+},
+{
+"path": "project/assets/divinakra_megas/mega_blastoise-menu-shiny.png.import",
+"bytes": 1002,
+"sha256": "91c7fda2614e4dc1e32837abdb9e06d1a8cdd7480d5b395dec83a22d11515b38"
+},
+{
 "path": "project/assets/divinakra_megas/mega_blastoise-menu.png",
 "bytes": 1304,
 "sha256": "2e4fad2ee03953d617d5d3bd5116eaa77a2dc9d812572dd4140b7769ad51f963"
@@ -17830,6 +17840,16 @@
 "path": "project/assets/divinakra_megas/mega_blastoise-overworld-native.png.import",
 "bytes": 1020,
 "sha256": "cf92589f5984e5a148598e8bde71182e9d92ba50cda3d87fdc9421c1ff359cc2"
+},
+{
+"path": "project/assets/divinakra_megas/mega_blastoise-overworld-shiny.png",
+"bytes": 2582,
+"sha256": "5bd8e6a836de94c61aef08d79095c53cdd7cb654656786cf74e4ee634005572b"
+},
+{
+"path": "project/assets/divinakra_megas/mega_blastoise-overworld-shiny.png.import",
+"bytes": 1017,
+"sha256": "a564ef9551cd9aa21826849c46b196f4ac7856c1481571c96e13057066686cd6"
 },
 {
 "path": "project/assets/divinakra_megas/mega_blastoise-overworld.png",
@@ -17847,6 +17867,16 @@
 "sha256": "e94413fb52503eb530ad7d4c375c5c99d9545b73e028d3d6f1c693f99833d407"
 },
 {
+"path": "project/assets/divinakra_megas/mega_charizard_x-menu-shiny.png",
+"bytes": 1206,
+"sha256": "885b9a812a0fad0a113081201ef8b4394d8f0eb4b3f5dc32b323b17fa53b3845"
+},
+{
+"path": "project/assets/divinakra_megas/mega_charizard_x-menu-shiny.png.import",
+"bytes": 1008,
+"sha256": "65475fcaa5bb30c79c5d41087f0d34e2aca4412230e3cc8f2260e302c727f642"
+},
+{
 "path": "project/assets/divinakra_megas/mega_charizard_x-menu.png",
 "bytes": 1140,
 "sha256": "849e768df4a5d3167490d0a9597dab3eec167508cc344f8ce8cdcfa27c144225"
@@ -17862,6 +17892,16 @@
 "sha256": "f877a318b069c0936f2d28b2be7b85c892db50c7a7194915dc52b118c3a0c548"
 },
 {
+"path": "project/assets/divinakra_megas/mega_charizard_x-overworld-shiny.png",
+"bytes": 2075,
+"sha256": "0581444ee9266023d1cf44d291f4d38ace3b4a77bb3cc87c6427f28a3fdc0be1"
+},
+{
+"path": "project/assets/divinakra_megas/mega_charizard_x-overworld-shiny.png.import",
+"bytes": 1023,
+"sha256": "98f22007218c3bb2a040cb5fe8198505902ead09d26da2d638744e6c6c5879d5"
+},
+{
 "path": "project/assets/divinakra_megas/mega_charizard_x-overworld.png",
 "bytes": 2141,
 "sha256": "df1b1e9ce29aa4d790dde7bbe34a4ca06d98fee8509ee293c83b6ef9a97c9259"
@@ -17872,9 +17912,59 @@
 "sha256": "c608f5f569150874e4d087e64917afdf72934ed3267b329c6241c25001777341"
 },
 {
+"path": "project/assets/divinakra_megas/mega_charizard_y-menu-shiny.png",
+"bytes": 1149,
+"sha256": "ac991a8abf6b7b06a71ac5552d53b06abc369823c3ef71a0b7f84a3590c01d82"
+},
+{
+"path": "project/assets/divinakra_megas/mega_charizard_y-menu-shiny.png.import",
+"bytes": 1008,
+"sha256": "107cb47bb1bb63dce0a740011af5dbcf2fdf096a795e22119835a113e9bda93d"
+},
+{
+"path": "project/assets/divinakra_megas/mega_charizard_y-menu.png",
+"bytes": 1121,
+"sha256": "cca8af02c504fd1d8c685c50de6332f36a494ff9deec7e65d142dbccd3b703ca"
+},
+{
+"path": "project/assets/divinakra_megas/mega_charizard_y-menu.png.import",
+"bytes": 990,
+"sha256": "5cdd792517549b5df5be839cf60def8b6727879428dc067a4a73b8281d2d65ee"
+},
+{
+"path": "project/assets/divinakra_megas/mega_charizard_y-overworld-shiny.png",
+"bytes": 2215,
+"sha256": "b6c12f171ecf8ea544ac7ef039df7380bd71572e439ce7e9863166926bfb0fe9"
+},
+{
+"path": "project/assets/divinakra_megas/mega_charizard_y-overworld-shiny.png.import",
+"bytes": 1023,
+"sha256": "5b7be57f52a96cdb80c0536cee14838a2e40d2dc05539a75cfe3f99dcba68fe5"
+},
+{
+"path": "project/assets/divinakra_megas/mega_charizard_y-overworld.png",
+"bytes": 2248,
+"sha256": "8ca956d3aa58456e0f81281ccd4ea411c0c51f7b82efe02496d809d011f1dbbd"
+},
+{
+"path": "project/assets/divinakra_megas/mega_charizard_y-overworld.png.import",
+"bytes": 1005,
+"sha256": "c2f2ec29d5c276e26c15fdeba35c26bccda7e8f37ae48466c144a0b80b27d8a4"
+},
+{
 "path": "project/assets/divinakra_megas/mega_gengar-menu-native.png.import",
 "bytes": 995,
 "sha256": "c08970825c54e72add6050ac432b2316df849d3ee875bb9c9ba13258f8eb65fb"
+},
+{
+"path": "project/assets/divinakra_megas/mega_gengar-menu-shiny.png",
+"bytes": 1122,
+"sha256": "7cc11b255bdb45975962c289d03c87df7e76e3e4c84a381274c7cda103a9446f"
+},
+{
+"path": "project/assets/divinakra_megas/mega_gengar-menu-shiny.png.import",
+"bytes": 993,
+"sha256": "c9d2f7d1469964dc803ab19d87f256d1580e8deb0954c86c0868397465684c1b"
 },
 {
 "path": "project/assets/divinakra_megas/mega_gengar-menu.png",
@@ -17892,6 +17982,16 @@
 "sha256": "88d54cc61c921fa9dc4e54b536695793246f15446ea5503c355651eaa1c9c5ca"
 },
 {
+"path": "project/assets/divinakra_megas/mega_gengar-overworld-shiny.png",
+"bytes": 1961,
+"sha256": "8371d1e43264b63f5bdcf8a84e580a910e0e46e7201f49e47c48216d1d866ef0"
+},
+{
+"path": "project/assets/divinakra_megas/mega_gengar-overworld-shiny.png.import",
+"bytes": 1008,
+"sha256": "061fe07d1942c9185d925ea632c30dc28405c03df7cab39f18f6425ad745163b"
+},
+{
 "path": "project/assets/divinakra_megas/mega_gengar-overworld.png",
 "bytes": 2042,
 "sha256": "a59782b4817044c53cc4466d0af994e7e53b7c3552b5898292547da295d1af8e"
@@ -17900,6 +18000,16 @@
 "path": "project/assets/divinakra_megas/mega_gengar-overworld.png.import",
 "bytes": 989,
 "sha256": "159e91bf4f2196551a0e47ac86790d0b081d40dec021bf2cd510aa25eb682e2b"
+},
+{
+"path": "project/assets/divinakra_megas/mega_gyarados-menu-shiny.png",
+"bytes": 1369,
+"sha256": "364b46918d099a305fe37390bac4d0258abd14384dbdc0dc225d4084e5599878"
+},
+{
+"path": "project/assets/divinakra_megas/mega_gyarados-menu-shiny.png.import",
+"bytes": 998,
+"sha256": "3cac34abeca19b253521ccdc36b4ec7d8cc0a6fbe885b26de6a702dc2d951cba"
 },
 {
 "path": "project/assets/divinakra_megas/mega_gyarados-menu.png",
@@ -17912,6 +18022,16 @@
 "bytes": 981
 },
 {
+"path": "project/assets/divinakra_megas/mega_gyarados-overworld-shiny.png",
+"bytes": 9356,
+"sha256": "01aa1ee1c99fb6ee09da1891c7bcd65d1801465d6c8af57b1bf15dff3d608a74"
+},
+{
+"path": "project/assets/divinakra_megas/mega_gyarados-overworld-shiny.png.import",
+"bytes": 1014,
+"sha256": "d557a31b714308d5be31a9fd157392a9b55b48bf38814b1b10b5ed54ccca45bd"
+},
+{
 "path": "project/assets/divinakra_megas/mega_gyarados-overworld.png",
 "sha256": "01ad2010aa4071dc6bbd048f29009c3b2ef63c699c1d06d51eb2e6a4b643cd0c",
 "bytes": 9955
@@ -17922,6 +18042,96 @@
 "bytes": 996
 },
 {
+"path": "project/assets/divinakra_megas/mega_kangaskhan-menu-shiny.png",
+"bytes": 1212,
+"sha256": "eb36abecaae40d31f57bf7874e05263b9f95be86cc9a85fd9467893823cf4888"
+},
+{
+"path": "project/assets/divinakra_megas/mega_kangaskhan-menu-shiny.png.import",
+"bytes": 1004,
+"sha256": "a4c8e1829686decde63dd9783c219f39ac1ed2656871feb7bc8fcb2156f2f907"
+},
+{
+"path": "project/assets/divinakra_megas/mega_kangaskhan-menu.png",
+"bytes": 1079,
+"sha256": "57325366a353f198584efdee06f3fa7c6623e0ba92ac1fe235ca452ecd04032f"
+},
+{
+"path": "project/assets/divinakra_megas/mega_kangaskhan-menu.png.import",
+"bytes": 986,
+"sha256": "706c639f16b9c40b0a7c27262dd0ba7c95cdac86a6c8df8f4ec3991a943545e0"
+},
+{
+"path": "project/assets/divinakra_megas/mega_kangaskhan-overworld-shiny.png",
+"bytes": 2239,
+"sha256": "28582a0c99e0d136fbcacad7e518c1822c041fd6b83563c5357dbefb080e89cd"
+},
+{
+"path": "project/assets/divinakra_megas/mega_kangaskhan-overworld-shiny.png.import",
+"bytes": 1020,
+"sha256": "086fe2e54bc744b82a34afc14913daa2bcf80c17cbf180b0d263767c6a9fcba1"
+},
+{
+"path": "project/assets/divinakra_megas/mega_kangaskhan-overworld.png",
+"bytes": 2141,
+"sha256": "9910a29b45571db0ef355b2d9e10f18d58c0ed35bbe4b68e2c5f54e800f2b4e7"
+},
+{
+"path": "project/assets/divinakra_megas/mega_kangaskhan-overworld.png.import",
+"bytes": 1002,
+"sha256": "e4590fb7948a93f9bfaf2de7b3e7fade0ac76329be8081bf224bd5e2af92b79b"
+},
+{
+"path": "project/assets/divinakra_megas/mega_sharpedo-menu-shiny.png",
+"bytes": 953,
+"sha256": "c3c01e8610d8f1bf9e0c0233ffc85bd14dd10c29bf78f854ca93a718a53a406f"
+},
+{
+"path": "project/assets/divinakra_megas/mega_sharpedo-menu-shiny.png.import",
+"bytes": 998,
+"sha256": "5537b0ac571add34bdacad9bdc05b5ce6c450cef458fe3ee7fac6376e4ab015f"
+},
+{
+"path": "project/assets/divinakra_megas/mega_sharpedo-menu.png",
+"bytes": 946,
+"sha256": "fc8ffa1dc48c3892f72f8cbd04db47bb4c90eacaa892506df4c29fc0981f5389"
+},
+{
+"path": "project/assets/divinakra_megas/mega_sharpedo-menu.png.import",
+"bytes": 980,
+"sha256": "1b42196d4f8baba73e1297556bdbdd9a38a9c3cfd9e5c58f20efc5a6b30789e2"
+},
+{
+"path": "project/assets/divinakra_megas/mega_sharpedo-overworld-shiny.png",
+"bytes": 1970,
+"sha256": "c9e960a216c8d15b7db1decaee79615e952cbcfd524bd9ee7590959e57e24d22"
+},
+{
+"path": "project/assets/divinakra_megas/mega_sharpedo-overworld-shiny.png.import",
+"bytes": 1014,
+"sha256": "bea2d5ab3e5d143978f1d9b31d3a567bca044d2e68dcb006f4ca02d8bbda6376"
+},
+{
+"path": "project/assets/divinakra_megas/mega_sharpedo-overworld.png",
+"bytes": 2006,
+"sha256": "f33c0af1c0c0e022dcef8f54ee8000c9c207fcc2650967940996bcc1fff3edf3"
+},
+{
+"path": "project/assets/divinakra_megas/mega_sharpedo-overworld.png.import",
+"bytes": 996,
+"sha256": "937f5d26fef52eb9b16bf343c5e4d413abb72dd7ae1e7a1e4aa555955892a73f"
+},
+{
+"path": "project/assets/divinakra_megas/mega_venusaur-menu-shiny.png",
+"bytes": 944,
+"sha256": "8bc8a3e00bacb00784502854cd648a38bb34bf224f7d0e79f49e29c4a7210b13"
+},
+{
+"path": "project/assets/divinakra_megas/mega_venusaur-menu-shiny.png.import",
+"bytes": 999,
+"sha256": "f635f967de100b0068f17011ded0544b8621f4286b2e6de811c2eb3df12e711a"
+},
+{
 "path": "project/assets/divinakra_megas/mega_venusaur-menu.png",
 "bytes": 1015,
 "sha256": "1d9b7ea4825b835eea6fc88975004976a1f248e1392d97607e973194bb1f9fb3"
@@ -17930,6 +18140,16 @@
 "path": "project/assets/divinakra_megas/mega_venusaur-menu.png.import",
 "bytes": 981,
 "sha256": "de8fc04c5c9e6aa450f36b39cfee4445d8d99a16778ea16a4e7ed7788728c13d"
+},
+{
+"path": "project/assets/divinakra_megas/mega_venusaur-overworld-shiny.png",
+"bytes": 2665,
+"sha256": "df87f972e48efa63563c9fa0d93183aa22b3d45cc5072f2028e6876398ac3778"
+},
+{
+"path": "project/assets/divinakra_megas/mega_venusaur-overworld-shiny.png.import",
+"bytes": 1014,
+"sha256": "9d99d361ba9a5c21f1f48a6119e5e770b1298b6e7f5471a37af94a4f8533f809"
 },
 {
 "path": "project/assets/divinakra_megas/mega_venusaur-overworld.png",
@@ -88253,8 +88473,8 @@
 },
 {
 "path": "project/scripts/divinakra_mega_art.gd",
-"bytes": 1312,
-"sha256": "0619d07817ec54ee8eb48406900d671f1daf6b86d7d6cc00364fa68b1ce711de"
+"bytes": 1384,
+"sha256": "78d7bb2fd3172313446c957a6c2eae5e86a88d1183cbab9a79114dc4b4cc86cb"
 },
 {
 "path": "project/scripts/divinakra_mega_art.gd.uid",
@@ -88588,8 +88808,8 @@
 },
 {
 "path": "project/scripts/pokemon_data.gd",
-"bytes": 22140,
-"sha256": "a01fc617d0f981e2ff6f76b584aefa937f80135d020f590693254b8accc05261"
+"bytes": 22308,
+"sha256": "eb481a30cc788f314431358e00cb389a2cc9f7728c593cef013158821fa1bc32"
 },
 {
 "path": "project/scripts/pokemon_data.gd.uid",
