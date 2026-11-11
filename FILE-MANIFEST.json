@@ -1,5 +1,5 @@
 {
-"snapshot": "fixes170",
+"snapshot": "fixes171",
 "files": [
 {
 "path": ".gitignore",
@@ -87803,8 +87803,8 @@
 },
 {
 "path": "project/scripts/coop_game.gd",
-"bytes": 70949,
-"sha256": "384597485d040ff27c330fd98ec6a4cfed0280a5f0f43454472477f41738fae7"
+"bytes": 71246,
+"sha256": "46194deda445f9b335e2b70416f7f287b68565d16abc957009e9583c2b96eb3e"
 },
 {
 "path": "project/scripts/coop_game.gd.uid",
@@ -88153,8 +88153,8 @@
 },
 {
 "path": "project/scripts/coop_transport.gd",
-"bytes": 6947,
-"sha256": "8670c82d6eb0f74a1257e6cb13c6dfe81f17b254e1d1fe4f5023a2dc3a5745d8"
+"bytes": 7420,
+"sha256": "492f779c8290b145ed9d4d13824335e60c9cab17995251d5e00d0def3c3fc195"
 },
 {
 "path": "project/scripts/coop_transport.gd.uid",

@@ -14,6 +14,13 @@ const LOADING_TIMEOUT_MS := 120000
 ## have not spoken since their games were opened need time to find a path to
 ## each other: it has taken 24 seconds, and the join gave up at 20.
 const FIRST_CONTACT_MS := 60000
+## How long a joining player puts up with silence after that, until they are
+## in the world. A host can stop sending for well over 20 seconds while it
+## prepares the next part of a large world, and the join was given up with
+## minutes of downloading done.
+const JOIN_SILENCE_MS := 90000
+## True once a joining player is in the world; from then the usual limit holds.
+var settled := false
 var server := TCPServer.new()
 var peers: Dictionary = {}
 var hosting := false
@@ -56,7 +63,9 @@ func set_loading(peer:int, loading:bool, remote:bool=false)->void:
     peers[peer]["remote_loading_until" if remote else "local_loading_until"] = Time.get_ticks_msec()+LOADING_TIMEOUT_MS if loading else 0
 
 func receive_expired(state:Dictionary, now:int)->bool:
-    var limit:=FIRST_CONTACT_MS if joining and not state.get("heard",false) else TIMEOUT_MS
+    var limit:=TIMEOUT_MS
+    if joining and not state.get("heard",false):limit=FIRST_CONTACT_MS
+    elif joining and not settled:limit=JOIN_SILENCE_MS
     return now-int(state.seen)>limit and now>int(state.get("local_loading_until",0)) and now>int(state.get("remote_loading_until",0))
 
 func send(peer: int, message: Dictionary) -> Error:
@@ -168,6 +177,7 @@ func stop() -> void:
     peers.clear()
     hosting = false
     joining = false
+    settled = false
     _next_peer = 2
 
 func _exit_tree() -> void:
