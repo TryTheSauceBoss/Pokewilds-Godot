@@ -1,10 +1,11 @@
 extends Control
 ## Original SpecialBattleMewtwo and Attack.Mewtwo_Special1, at 60 source ticks/s.
 ## Owned by one encounter; no shared battle sprite/material state survives cleanup.
+# The two long lines are split so each part fits the message box.
 const SPEECH := {100:"Humans...", 280:"They cared nothing for me...",
-    560:"From the moment I first opened my eyes, they have sought to control me...",
+    560:"From the moment I first opened my eyes,", 760:"they have sought to control me...",
     960:"But no more.", 1160:"Why are you here?",
-    1310:"You seek to control me, just like the others.", 1580:"..."}
+    1310:"You seek to control me,", 1445:"just like the others.", 1580:"..."}
 const RIPPLE := [0,0,0,1,2,2,2,3,4,4,4,3,2,2,2,1]
 var host: Node
 var timeline: Dictionary
@@ -26,6 +27,9 @@ var rear_x := 0
 var ripple_y := -16
 var effect: ColorRect
 var foreground: Control
+const RAISED_UI := ["CommandBox", "ExactBattleCommandFrame", "BattleStatus", "DoubleStatus", "MessageArrow",
+    "Actions", "MoveTypeBox", "MoveBox", "BattleSubmenu"]
+var raised_ui: Dictionary = {}
 var level := 0.0
 
 func setup(owner_node: Node, shiny: bool) -> void:
@@ -59,6 +63,14 @@ func setup(owner_node: Node, shiny: bool) -> void:
     foreground.z_index = 2
     foreground.draw.connect(_draw_front)
     add_child(foreground)
+    # The foreground draws the source's text-box frame over the front rocks.
+    # The battle text and menus must stay above it, or the box shows empty
+    # and no attack can be chosen.
+    for name in RAISED_UI:
+        var node := host.get_node_or_null("UI/BattlePanel/" + name) as CanvasItem
+        if node != null and node.z_index <= foreground.z_index:
+            raised_ui[node] = node.z_index
+            node.z_index = foreground.z_index + 1
     effect = ColorRect.new()
     effect.mouse_filter = Control.MOUSE_FILTER_IGNORE
     effect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -230,4 +242,7 @@ func _draw_rocks(canvas: Control, layer: int) -> void:
     canvas.draw_set_transform(Vector2.ZERO,0.0,size / Vector2(160,144))
 
 func _exit_tree() -> void:
+    for node in raised_ui:
+        if is_instance_valid(node): node.z_index = int(raised_ui[node])
+    raised_ui.clear()
     if is_instance_valid(breath_sprite): breath_sprite.queue_free()

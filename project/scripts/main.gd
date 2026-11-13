@@ -6017,8 +6017,15 @@ func _play_source_mewtwo_intro() -> void:
             elapsed += get_process_delta_time()
             var target := mini(1708, int(elapsed * 60.0))
             while tick < target:
-                if speech.has(tick): _start_battle_text(String(speech[tick]))
+                # The battle screen is still hidden here: MEWTWO speaks to the
+                # player in front of its statue, so the words go in the
+                # overworld message box. Without them the wait looks frozen.
+                if speech.has(tick):
+                    _show_message(String(speech[tick]))
+                    message_timer = 999.0
                 tick += 1
+        message_panel.hide()
+        message_timer = 0.0
     else:
         world.environment_system.battle_music.seek(28.55)
     source_mewtwo_intro_seen = true
@@ -12208,7 +12215,14 @@ func _on_structure_action(action: String) -> void:
         await get_tree().create_timer((20.0 if pressed else 3.0) / 60.0).timeout
         if pressed:
             world.play_source_sound("enter1")
-            SourceMansionRuntime.press_switch(world, Vector2i(int(parts[1]), int(parts[2])))
+            var gates := {}
+            SourceMansionRuntime.press_switch(world, Vector2i(int(parts[1]), int(parts[2])), gates)
+            # In a shared world the gates move for every player, and the host
+            # records them so they stay that way for players who join later.
+            if is_instance_valid(coop_game) and coop_game.active and not gates.is_empty():
+                if not await coop_game.building.share_mutations(gates):
+                    SourceMansionRuntime.press_switch(world, Vector2i(int(parts[1]), int(parts[2])))
+                    _show_message("The switch would not move. Try again.")
         mansion_switch_open = false
         world.set_gameplay_enabled(not _field_ui_blocks_gameplay())
     elif action.begins_with("MANSION_LOCK:"):
@@ -12219,6 +12233,12 @@ func _on_structure_action(action: String) -> void:
         if parts.size() != 3:
             return
         var cell := Vector2i(int(parts[1]), int(parts[2]))
+        # In a shared world the opened door is opened for every player, and
+        # the host records it, so it stays open for players who join later.
+        if is_instance_valid(coop_game) and coop_game.active:
+            if not await coop_game.building.share_tile_change(cell, {"kind": "MANSION_DOOR"}):
+                _show_message("The door would not open. Try again.")
+                return
         if world.unlock_mansion_door(cell):
             inventory["SECRET KEY"] = int(inventory.get("SECRET KEY", 0)) - 1
             _show_message("The SECRET KEY opened the door!")

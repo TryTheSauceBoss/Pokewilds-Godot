@@ -233,6 +233,9 @@ var source_tiles: Dictionary = {}
 var habitat_routes: Dictionary = {}
 var source_area_entries: Dictionary = {}
 var source_area_rects: Dictionary = {}
+## Cells of each area plane that draw something, for centering the camera on
+## the room the player is in.
+var source_area_drawn_cells: Dictionary = {}
 var source_area_layers: Dictionary = {}
 var source_area_origins: Dictionary = {}
 var source_layer_area_ids: Dictionary = {}
@@ -606,6 +609,7 @@ func generate_world(
     habitat_routes.clear()
     source_area_entries.clear()
     source_area_rects.clear()
+    source_area_drawn_cells.clear()
     source_area_layers.clear()
     source_area_origins.clear()
     source_layer_area_ids.clear()
@@ -1023,8 +1027,57 @@ func _register_exact_exterior_interactables() -> void:
                 target_layer, cell.x, cell.y
             ]
 
+    _clear_door_fronts()
     if exact_world != null:
         exact_world.set_meta("unown_generated_signs", unown_generated_signs)
+
+## Nothing may stand in front of a door: generation can leave a cliff edge,
+## ledge, rock, tree, berry tree or bush there (seen at the mansion), and
+## players should never have to think of CUT or DIG to get in. Doors face down
+## the screen (the map is flipped from the source's y-up layout), so the tile
+## below a door is its front. Every player regenerates the same map, so all
+## players make the same change.
+func _clear_door_fronts() -> void:
+    if exact_world == null:
+        return
+    for raw_tile in exact_world.tiles.values():
+        var door := raw_tile as SourceTile
+        if door == null:
+            continue
+        var names := door.name + " " + door.name_upper
+        if "door" not in names and door.name_upper != "pkmnmansion_ext_locked":
+            continue
+        var door_cell := SourceWorldData.pixel_to_cell(door.position)
+        var building := (door.name_upper if not door.name_upper.is_empty() else door.name).get_slice("_", 0)
+        var front_cell := door_cell + Vector2i(0, 1)
+        var front := exact_world.tile_at(front_cell)
+        if front == null or _part_of_building(front, building):
+            continue
+        var ground := door.name if not door.name.is_empty() and "door" not in door.name else "sand1"
+        _clear_door_tile(front, ground)
+        # Big trees, berry trees and savanna trees cover more than one tile:
+        # remove the rest of anything that still blocks the front tile.
+        if exact_world.is_solid(front_cell):
+            for dy in range(-1, 2):
+                for dx in range(-1, 2):
+                    var near := exact_world.tile_at(front_cell + Vector2i(dx, dy))
+                    if near == null or near == front or near == door or _part_of_building(near, building):
+                        continue
+                    if near.name_upper.is_empty() and not near.is_solid:
+                        continue
+                    _clear_door_tile(near, near.name if not (near.is_solid or near.is_ledge or near.is_water or near.is_lava) else ground)
+
+func _part_of_building(tile: SourceTile, building: String) -> bool:
+    return not building.is_empty() and (tile.name_upper.begins_with(building) or tile.name.begins_with(building))
+
+func _clear_door_tile(tile: SourceTile, ground: String) -> void:
+    var base_blocks := tile.is_ledge or tile.is_water or tile.is_lava or \
+        SourceWorldData.is_upper_solid(tile.name) or SourceWorldData.ledge_direction(tile.name) != Vector2i.ZERO
+    tile.set_names(ground if base_blocks else tile.name, "")
+    if tile.is_solid or tile.is_cuttable or tile.is_headbuttable:
+        tile.set_names(ground, "")
+    tile.has_item = ""
+    tile.has_item_amount = 0
 
 func _spawn_location_npcs() -> void:
     if not exact_world_mode or exact_world == null:
@@ -2108,6 +2161,22 @@ func _build_source_interiors(_collision_body: StaticBody2D) -> void:
     layer.add_child(collision_body)
     await _build_generated_source_interiors(layer, collision_body, true)
 
+## Tall furniture (potted plants, statues, shelves) reaches up into the rows
+## above its own tile. Anything standing in those rows is behind it, so that
+## top part is drawn over every character. A fixed child sprite does this with
+## no per-frame work, so it can never lag a frame behind a walking player.
+func _add_furniture_top(sprite: Sprite2D, region: Rect2) -> void:
+    var top := Sprite2D.new()
+    top.name = "FurnitureTop"
+    top.texture = sprite.texture
+    top.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+    top.centered = false
+    top.region_enabled = true
+    top.region_rect = Rect2(region.position, Vector2(region.size.x, region.size.y - TILE))
+    top.z_as_relative = false
+    top.z_index = RenderingServer.CANVAS_ITEM_Z_MAX
+    sprite.add_child(top)
+
 func _build_generated_source_interiors(
         parent: Node2D,
         collision_body: StaticBody2D,
@@ -2137,7 +2206,16 @@ func _build_generated_source_interiors(
         source_area_layers[area_id] = area_layer
         var tiles: Dictionary = plan.get("tiles", {})
         var solids: Dictionary = plan.get("solids", {})
-        for raw_local_cell in tiles.keys():
+        # Tall furniture (statues, shelves, potted plants) reaches up into the
+        # row above and shares one draw layer, so the order sprites are added
+        # decides which is on top. Add rows top to bottom: a statue standing in
+        # front of a plant pot then draws over the pot, not under it.
+        var ordered_cells: Array = tiles.keys()
+        ordered_cells.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.y < b.y or (a.y == b.y and a.x < b.x))
+        # Only cells that draw something count as the room; a floor plane can
+        # hold many empty cells around it.
+        var drawn_cells: Dictionary = {}
+        for raw_local_cell in ordered_cells:
             if cooperative and Time.get_ticks_usec() - slice_started >= 4000:
                 await get_tree().process_frame
                 slice_started = Time.get_ticks_usec()
@@ -2156,6 +2234,12 @@ func _build_generated_source_interiors(
                 tile_sprite.region_enabled = true
                 tile_sprite.region_rect = region
                 tile_sprite.position = Vector2(world_cell * TILE) + Vector2(0, TILE - region.size.y)
+                # Empty cells use a fully transparent "blank" picture; skip them.
+                var drawn_texture := spec["texture"] as Texture2D
+                if drawn_texture != null and not drawn_texture.resource_path.get_file().begins_with("blank."):
+                    drawn_cells[world_cell] = true
+                if upper and region.size.y > TILE:
+                    _add_furniture_top(tile_sprite, region)
                 if upper or tile.name in ["cave1_regi1", "cave1_regi2", "cave1_regi3"] or "__on" in tile.name or "__off" in tile.name:
                     source_interior_upper_sprites[world_cell] = tile_sprite
             if solids.has(local_cell) or "stool" in tile.name_upper:
@@ -2179,6 +2263,7 @@ func _build_generated_source_interiors(
         var entry := origin + local_entry
         source_area_entries[area_id] = entry
         source_area_rects[area_id] = Rect2i(origin, size)
+        source_area_drawn_cells[area_id] = drawn_cells
         area_return_cells["%s_ENTRY" % area_id] = entry
         var transitions := plan.get("transitions", {}) as Dictionary
         for raw_local_cell in transitions:
@@ -2238,6 +2323,8 @@ func _register_source_interior_aliases(plans: Array[Dictionary]) -> void:
         source_area_entries[alias] = origin + local_entry
         source_area_layers[alias] = source_area_layers[area_id]
         source_area_rects[alias] = source_area_rects[area_id]
+        if source_area_drawn_cells.has(area_id):
+            source_area_drawn_cells[alias] = source_area_drawn_cells[area_id]
         area_return_cells["%s_ENTRY" % alias] = origin + local_entry
 
 func _find_route_entry(plan: Dictionary, route_name: String) -> Vector2i:
@@ -4001,6 +4088,26 @@ func _interact_in_front() -> void:
         elif kind == "source_key":
             if bool(data.get("used", false)):
                 world_message.emit("There is nothing else here.")
+                return
+            var coordinator = get_parent().get("coop_game")
+            if is_instance_valid(coordinator) and coordinator.active and not coordinator.hosting:
+                # A guest takes a key of their own and the key stays where it
+                # is: the world's key belongs to the host, so a guest cannot
+                # walk in, take it and leave with it.
+                if int(get_parent().inventory.get("SECRET KEY", 0)) > 0:
+                    world_message.emit("You already have the MANSION KEY.")
+                    return
+                item_collected.emit(String(data.get("item", "MANSION KEY")))
+                world_message.emit("You found the MANSION KEY!")
+                return
+            if is_instance_valid(coordinator) and coordinator.active:
+                # The host's key is recorded with the world, so it stays taken
+                # for the host. Guests still find a key there for themselves.
+                if await coordinator.building.share_tile_change(target, {"kind": "MANSION_KEY_TAKEN"}, {"SECRET KEY": 1}):
+                    _take_mansion_key(target)
+                    world_message.emit("You found the MANSION KEY!")
+                else:
+                    world_message.emit("Try again in a moment.")
                 return
             data["used"] = true
             landmarks[target] = data
@@ -9140,6 +9247,25 @@ func _active_source_interior_route() -> Dictionary:
         return {}
     return {"name": tile.route_belongs_to.name, "level": tile.route_belongs_to.level}
 
+## Some floor tiles inside the mansion and other generated places belong to no
+## route. For the music, standing on one must not count as leaving: that
+## switched to another song and restarted the mansion song on the next step.
+## Keep the last route found in the same place until a tile names another.
+## (Wild encounters still use the tile's own route.)
+var _music_route: Dictionary = {}
+
+## Keeps the last song while moving between floors of a building or cave;
+## it is cleared only when the player is back on the overworld.
+func _music_interior_route() -> Dictionary:
+    var found := _active_source_interior_route()
+    # A room whose route has no song of its own (the mansion's Mewtwo room)
+    # keeps the building's song instead of falling back to trail music.
+    if not found.is_empty() and (
+            _music_route.is_empty()
+            or SourceRouteData.ROUTE_MUSIC.has(String(found.get("name", "")))):
+        _music_route = found
+    return _music_route
+
 func request_fishing_encounter(rod_name: String) -> void:
     var beside_water := false
     var player_cell: Vector2i = _player_cell()
@@ -9871,6 +9997,23 @@ func can_awaken_regi(species_name: String) -> bool:
         and not (event_progress.get("regis_caught", []) as Array).has(species)
     )
 
+## Takes the mansion key off the map for the player who picked it up: in a
+## shared world, the host. Guests each take a key of their own and it stays.
+func _take_mansion_key(cell: Vector2i) -> void:
+    var data: Dictionary = landmarks.get(cell, {})
+    if String(data.get("type", "")) != "source_key":
+        return
+    data["used"] = true
+    landmarks[cell] = data
+    var key_sprite := data.get("sprite") as Sprite2D
+    if is_instance_valid(key_sprite):
+        key_sprite.visible = false
+    var key_collision := data.get("collision") as CollisionShape2D
+    if is_instance_valid(key_collision):
+        key_collision.queue_free()
+    blocked.erase(cell)
+    source_interior_mutations[_cell_key(cell)] = {"kind": "MANSION_KEY_TAKEN"}
+
 func unlock_mansion_door(cell: Vector2i) -> bool:
     if not exact_world_mode or exact_world == null:
         return false
@@ -9921,6 +10064,13 @@ func _apply_source_interior_mutation(cell: Vector2i, mutation: Dictionary) -> vo
         SourceMansionRuntime.set_gate(self, cell, String(mutation.get("name", "")))
         return
     if kind == "COLLECTED":
+        # The host taking the mansion key leaves a key for each guest.
+        var key_owner = get_parent().get("coop_game")
+        if is_instance_valid(key_owner) and key_owner.active and not key_owner.hosting \
+                and exact_world_mode and exact_world != null and exact_world.contains_cell(cell):
+            var key_tile := exact_world.tile_at(cell)
+            if key_tile != null and key_tile.name_upper == "pokemon_mansion_key":
+                return
         SourceMansionRuntime.clear_collected_item(self, cell)
         SourceMineRuntime.clear_collected_item(self, cell)
         interior_interactables.erase(cell)
@@ -9935,6 +10085,12 @@ func _apply_source_interior_mutation(cell: Vector2i, mutation: Dictionary) -> vo
                 collected_tile.has_item_amount = 0
                 collected_tile.set_names(collected_tile.name, "")
                 _refresh_exact_streams()
+        return
+    if kind == "MANSION_KEY_TAKEN":
+        # Only the host's own key is gone. Guests always find a key there.
+        var coordinator = get_parent().get("coop_game")
+        if not (is_instance_valid(coordinator) and coordinator.active and not coordinator.hosting):
+            _take_mansion_key(cell)
         return
     if kind == "MANSION_DOOR":
         var locked_tile := exact_world.tile_at(cell) if exact_world != null else null
@@ -10312,6 +10468,7 @@ func environment_context() -> Dictionary:
     var route_name := ""
     var dungeon := false
     if active_area_id == "OVERWORLD":
+        _music_route = {}
         if exact_world_mode and exact_world != null:
             var route := exact_world.route_at(cell)
             if route != null:
@@ -10321,7 +10478,7 @@ func environment_context() -> Dictionary:
             route_name = String(habitat_routes.get(cell, ""))
             dungeon = SourceRouteData.is_dungeon(route_name)
     else:
-        var route_data := _active_source_interior_route()
+        var route_data := _music_interior_route()
         route_name = String(route_data.get("name", ""))
         dungeon = SourceRouteData.is_dungeon(route_name)
     return {
@@ -11452,6 +11609,7 @@ func _configure_camera() -> void:
         camera.limit_top = area_rect.position.y * TILE
         camera.limit_right = area_rect.end.x * TILE
         camera.limit_bottom = area_rect.end.y * TILE
+        _center_small_area(camera, active_area_id)
     elif active_area_id == "HOUSE":
         camera.limit_left = (map_w + 8) * TILE
         camera.limit_top = 4 * TILE
@@ -11495,7 +11653,62 @@ func adjust_camera_zoom(direction: int) -> int:
     var camera := player.get_node_or_null("Camera2D") as Camera2D
     if camera != null:
         camera.zoom = _pixel_exact_zoom(camera_zoom_level)
+        if source_area_rects.has(active_area_id) and active_area_id not in ["HOUSE", "FOSSIL_LAB"] and active_field_move != "BUILD":
+            _center_small_area(camera, active_area_id)
     return roundi(camera_zoom_level * 100.0)
+
+## A room smaller than the screen sat in a corner, because the camera stops at
+## the room's edges. Widen those edges evenly so the room stays centered.
+## A floor plane can hold several rooms far apart, so center on the room the
+## player is standing in: the drawn cells connected to the player's cell.
+func _center_small_area(camera: Camera2D, area_id: String) -> void:
+    var plane: Rect2i = source_area_rects[area_id]
+    var content := _current_room_rect(area_id, plane)
+    var view := get_viewport_rect().size / _pixel_exact_zoom(camera_zoom_level)
+    var limits := [plane.position.x * TILE, plane.position.y * TILE, plane.end.x * TILE, plane.end.y * TILE]
+    for axis in 2:
+        var low := content.position[axis] * TILE
+        var high := content.end[axis] * TILE
+        var pad := ceili((view[axis] - (high - low)) / 2.0)
+        if pad > 0:
+            limits[axis] = low - pad
+            limits[axis + 2] = high + pad
+    camera.limit_left = limits[0]
+    camera.limit_top = limits[1]
+    camera.limit_right = limits[2]
+    camera.limit_bottom = limits[3]
+
+func _current_room_rect(area_id: String, fallback: Rect2i) -> Rect2i:
+    var drawn: Dictionary = source_area_drawn_cells.get(area_id, {})
+    if drawn.is_empty():
+        return fallback
+    var start := _player_cell()
+    if not drawn.has(start):
+        var found := false
+        for radius in range(1, 4):
+            for dy in range(-radius, radius + 1):
+                for dx in range(-radius, radius + 1):
+                    if not found and drawn.has(start + Vector2i(dx, dy)):
+                        start += Vector2i(dx, dy)
+                        found = true
+        if not found:
+            return fallback
+    var low := start
+    var high := start
+    var seen := {start: true}
+    var queue: Array[Vector2i] = [start]
+    var index := 0
+    while index < queue.size() and index < 20000:
+        var cell := queue[index]
+        index += 1
+        low = Vector2i(mini(low.x, cell.x), mini(low.y, cell.y))
+        high = Vector2i(maxi(high.x, cell.x), maxi(high.y, cell.y))
+        for step in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+            var next: Vector2i = cell + step
+            if drawn.has(next) and not seen.has(next):
+                seen[next] = true
+                queue.append(next)
+    return Rect2i(low, high - low + Vector2i.ONE)
 
 func _clear_generated_world() -> void:
     for name in [
@@ -11684,7 +11897,14 @@ func _canonical_house_door(door: Vector2i) -> Vector2i:
 ## map, so a player indoors was marked at the map's edge; they are marked at
 ## that house's door instead. Anywhere else is returned unchanged.
 func outdoor_map_position(at: Vector2) -> Vector2:
-    if active_area_id != "OVERWORLD" or at.x < float(map_w + 8) or built_house_origins.is_empty():
+    if active_area_id != "OVERWORLD" or at.x < float(map_w + 8):
+        return at
+    # Inside the mansion, the fossil lab, a cave or another generated place:
+    # show the player at the door they went in by.
+    var entrance: Variant = _generated_area_entrance(at)
+    if entrance != null:
+        return Vector2(entrance) + Vector2(0.5, 0.5)
+    if built_house_origins.is_empty():
         return at
     var door_key := ""
     var nearest := -2147483648
@@ -11696,6 +11916,89 @@ func outdoor_map_position(at: Vector2) -> Vector2:
     if door_key.is_empty():
         return at
     return Vector2(_cell_from_key(door_key)) + Vector2(0.5, 0.5)
+
+## Every overworld door into a generated place, with where it leads inside, in
+## source coordinates so floors of the same building can be compared. Built
+## once per world: the doors never move.
+var _generated_entrances: Array = []
+var _generated_entrances_ready := false
+
+func _generated_area_entrance(at: Vector2) -> Variant:
+    var plan := _generated_plan_at(at)
+    if plan.is_empty():
+        return null
+    if not _generated_entrances_ready:
+        _generated_entrances_ready = true
+        _collect_generated_entrances()
+    if _generated_entrances.is_empty():
+        return null
+    var layer := int(plan.get("layer_index", 0))
+    var here := _generated_source_position(plan, Vector2i(at.floor()))
+    # Upper floors have no door of their own: use the floor nearest them that
+    # has one, then the door whose inside is closest (the mansion and the
+    # fossil lab share a floor).
+    var best_gap := 2147483647
+    for entry in _generated_entrances:
+        best_gap = mini(best_gap, absi(int(entry.layer) - layer))
+    var best: Variant = null
+    var best_distance := INF
+    for entry in _generated_entrances:
+        if absi(int(entry.layer) - layer) != best_gap:
+            continue
+        var distance := Vector2(entry.source - here).length_squared()
+        if distance < best_distance:
+            best_distance = distance
+            best = entry.door
+    return best
+
+func _generated_plan_at(at: Vector2) -> Dictionary:
+    for plan in generated_source_interior_plans:
+        var origin: Vector2i = source_area_origins.get(String(plan.get("id", "")), Vector2i(-1, -1))
+        if origin.x < 0:
+            continue
+        var size: Vector2i = plan.get("size", Vector2i.ONE)
+        if Rect2(Vector2(origin), Vector2(size)).has_point(at):
+            return plan
+    return {}
+
+func _generated_source_position(plan: Dictionary, world_cell: Vector2i) -> Vector2i:
+    var origin: Vector2i = source_area_origins.get(String(plan.get("id", "")), Vector2i.ZERO)
+    var bounds: Rect2i = plan.get("source_bounds", Rect2i())
+    var local := world_cell - origin
+    return Vector2i(bounds.position.x + local.x, bounds.end.y - 1 - local.y)
+
+func _collect_generated_entrances() -> void:
+    _generated_entrances.clear()
+    for plan in generated_source_interior_plans:
+        var origin: Vector2i = source_area_origins.get(String(plan.get("id", "")), Vector2i(-1, -1))
+        if origin.x < 0:
+            continue
+        var bounds: Rect2i = plan.get("source_bounds", Rect2i())
+        var transitions := plan.get("transitions", {}) as Dictionary
+        for raw_local_cell in transitions:
+            var transition := transitions[raw_local_cell] as Dictionary
+            if not bool(transition.get("exit_overworld", false)):
+                continue
+            var door: Vector2i = transition.get("source_cell", bounds.position + Vector2i(raw_local_cell))
+            _generated_entrances.append({"layer": int(plan.get("layer_index", 0)),
+                "source": _generated_source_position(plan, origin + Vector2i(raw_local_cell)), "door": door})
+    # The mansion, fossil lab, ruins and Regi chamber are entered by a door
+    # tile on the overworld that names the place.
+    for cell in interior_interactables:
+        var action := String(interior_interactables[cell])
+        var alias := ""
+        if action.begins_with("GOTO_AREA:"):
+            alias = action.trim_prefix("GOTO_AREA:")
+        elif action.begins_with("MANSION_LOCK:"):
+            alias = "MANSION_0"
+        if alias.is_empty() or not source_area_entries.has(alias):
+            continue
+        var inside: Vector2i = source_area_entries[alias]
+        var plan := _generated_plan_at(Vector2(inside))
+        if plan.is_empty():
+            continue
+        _generated_entrances.append({"layer": int(plan.get("layer_index", 0)),
+            "source": _generated_source_position(plan, inside), "door": Vector2i(cell)})
 
 func _house_origin_for(door: Vector2i) -> Vector2i:
     var canonical := _canonical_house_door(door)
