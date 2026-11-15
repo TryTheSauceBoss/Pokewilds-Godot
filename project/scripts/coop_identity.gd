@@ -22,7 +22,27 @@ static func mods() -> Dictionary:
         if not row.get("enabled",false):continue
         var path:=String(row.get("path",""))
         if not FileAccess.file_exists(path):return {"error":"An enabled mod package is missing."}
-        entries.append({"id":String(row.id),"name":String(row.get("name","MOD")),
-            "version":String(row.get("version","")),"sha256":FileAccess.get_sha256(path)})
-    # Ordered content hashes detect same-name edits and differing override order.
+        # Pictures, sounds and shiny colours are only drawn on this player's own
+        # screen; everyone else sees their own art. Only changes to how the game
+        # plays must match the host, so art-only mods join anyone, even players
+        # with no mods at all.
+        var play:=_gameplay_changes(packs._manifest(path))
+        if play.is_empty():continue
+        entries.append({"id":String(row.id),"changes":play})
+    # In load order: a later mod wins where two change the same thing.
     return {"entries":entries,"digest":JSON.stringify(entries,"",true,true).sha256_text()}
+
+const LOOKS:=["mod_name","front","back","overworld","front_shiny","back_shiny","overworld_shiny","cry"]
+
+static func _gameplay_changes(manifest:Dictionary)->Dictionary:
+    var result:={}
+    var species=manifest.get("species",{})
+    if not species is Dictionary:return result
+    for name in species:
+        var patch=species[name]
+        if not patch is Dictionary:continue
+        var kept:={}
+        for field in patch:
+            if not field in LOOKS:kept[field]=patch[field]
+        if not kept.is_empty():result[name]=kept
+    return result

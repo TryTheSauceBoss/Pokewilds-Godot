@@ -1,5 +1,5 @@
 {
-"snapshot": "fixes176",
+"snapshot": "fixes177",
 "files": [
 {
 "path": ".gitignore",
@@ -88063,8 +88063,8 @@
 },
 {
 "path": "project/scripts/coop_identity.gd",
-"bytes": 1533,
-"sha256": "afec8274a36de5141d02cb71db03df0db000a5e48aff024744d3051816df7d72"
+"bytes": 2333,
+"sha256": "880ad75f5c0b54fa60e58bd0fbdfb5d50f11df7b146670f91c66af14541aa177"
 },
 {
 "path": "project/scripts/coop_identity.gd.uid",
@@ -88293,8 +88293,8 @@
 },
 {
 "path": "project/scripts/coop_session.gd",
-"bytes": 9590,
-"sha256": "c15494b6119f6506a437b65a9928cc87edce56e6e1766553da9dd79c9e1af4ea"
+"bytes": 9597,
+"sha256": "e8aed2e23d18ae9e2a0f9cd022cd0ece077f2911f1daa13c03b33f188e79efdd"
 },
 {
 "path": "project/scripts/coop_session.gd.uid",
@@ -88628,8 +88628,8 @@
 },
 {
 "path": "project/scripts/main.gd",
-"bytes": 635556,
-"sha256": "68fa66cd5e5bf9635247ac2dc5ec22763cdcf982a8680dac396e1ec7f54daa09"
+"bytes": 636131,
+"sha256": "424c81c4ecd47686d5b6db1a7ff7d052c39cc061931e89045b65bf30d037c3ad"
 },
 {
 "path": "project/scripts/main.gd.uid",
@@ -88698,8 +88698,8 @@
 },
 {
 "path": "project/scripts/modding_menu.gd",
-"bytes": 7185,
-"sha256": "d74c858feac0ee415cade0792e13d48f1f8e6cc54e4b03732a1120adb6fdaf4b"
+"bytes": 7314,
+"sha256": "adbe6a0a10fab4d84e678ffe6f8eb3a544e686b9e18db70422fc7b03a13195e9"
 },
 {
 "path": "project/scripts/modding_menu.gd.uid",

@@ -28,6 +28,7 @@ func configure(owner_main: Node) -> void:
         var nav:=Button.new();nav.text="UP" if i==0 else "DN"
         nav.position=Vector2(246+i*32,4);nav.size=Vector2(30,18)
         _button_style(nav);header.add_child(nav)
+        for state in ["normal","hover","pressed","focus","disabled"]:nav.add_theme_stylebox_override(state,StyleBoxEmpty.new())
         nav.pressed.connect(func():_navigate(-1 if i==0 else 1))
     var body:=_panel(Vector2(2,29),Vector2(316,103))
     cursor=main._source_texture_rect(body,"Cursor",Vector2(8,10),Vector2(5,7),main.source_command_cursor.texture)

@@ -2366,6 +2366,10 @@ func _align_control_tick(marker: Control, row: Control) -> void:
 func _source_texture_rect(parent: Node, node_name: String, at: Vector2,
         dimensions: Vector2, texture: Texture2D = null) -> TextureRect:
     var rect := TextureRect.new()
+    # In dark mode the shared cursor holds its recoloured picture; recolouring
+    # that again leaves nothing visible, so new cursors start from the original.
+    if texture != null and is_instance_valid(source_command_cursor) and texture == source_command_cursor.texture:
+        texture = source_command_cursor.get_meta("tick_source", texture)
     rect.name = node_name
     rect.position = at
     rect.size = dimensions
@@ -12448,6 +12452,9 @@ func _apply_touch_config_theme() -> void:
     _set_touch_config_colors(touch_config, Color.BLACK)
     _style_touch_config_buttons()
     _style_touch_config_sliders()
+    # The black ink above is set again each time the panel opens; give dark
+    # mode its light ink straight away instead of waiting for a redraw.
+    if is_instance_valid(dark_mode_ui): dark_mode_ui._walk(touch_config)
     if touch_config_scroll == null:
         # Keep every setting reachable on smaller screens and within cutouts.
         var contents := touch_config.get_node("VBox") as VBoxContainer
