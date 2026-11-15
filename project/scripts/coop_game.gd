@@ -661,7 +661,10 @@ func record_keys(prefix:String)->Array:
 
 func _connection_lost()->void:
     if not active or hosting:return
-    end_session("HOST DISCONNECTED.\nSESSION ENDED." if _host_answered else UNREACHABLE)
+    # A host that only went quiet is not one that left: the two read differently.
+    if not _host_answered:end_session(UNREACHABLE)
+    elif String(session.transport.last_disconnect_reason)=="receive_timeout":end_session("THE HOST STOPPED RESPONDING.\nTRY AGAIN.")
+    else:end_session("HOST DISCONNECTED.\nSESSION ENDED.")
 
 func end_session(reason:String)->void:
     print("ONLINE session ended: ",reason," (transport: ",session.transport.last_disconnect_reason,")")
@@ -896,7 +899,9 @@ func game_started()->bool:
     if not hosting:
         visuals.set_area(_area());session.send_host({"kind":"entered","area":_area()});_loading=false;_refresh_drops();building.sync_current()
         var joined:bool=await wild.initialize_ids()
-        if joined:_travelling_box_enter.call_deferred()
+        if joined:
+            session.transport.settled=true
+            _travelling_box_enter.call_deferred()
         return joined
     shared_records={}
     for key in state.records:

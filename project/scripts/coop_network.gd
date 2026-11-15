@@ -16,15 +16,25 @@ const BEACON_PORT:=54556
 ## published. A build made without it has no online lobby list of its own:
 ## run your own (see lobby-directory/) and give it your own file.
 const LOBBY_FILE:="res://lobby_server.txt"
+const BUILD_INFO:="res://scripts/build_info.gd"
 static var _lobby_access:Array=[]
+
+static func _lobby_text()->String:
+    if ResourceLoader.exists(BUILD_INFO):
+        var info:Variant=load(BUILD_INFO)
+        if info!=null:return String(info.lobby())
+    if FileAccess.file_exists(LOBBY_FILE):
+        return FileAccess.get_file_as_string(LOBBY_FILE)
+    return ""
 
 ## [address, password], both "" when this build was made without the file.
 static func lobby_access()->Array:
     if _lobby_access.is_empty():
         _lobby_access=["",""]
-        if FileAccess.file_exists(LOBBY_FILE):
+        var contents:=_lobby_text()
+        if not contents.is_empty():
             var found:Array=[]
-            for line in FileAccess.get_file_as_string(LOBBY_FILE).split("\n"):
+            for line in contents.split("\n"):
                 var text:=String(line).strip_edges()
                 if not text.is_empty() and not text.begins_with("#"):found.append(text)
             if found.size()>=1 and String(found[0]).begins_with("https://"):_lobby_access[0]=String(found[0]).trim_suffix("/")

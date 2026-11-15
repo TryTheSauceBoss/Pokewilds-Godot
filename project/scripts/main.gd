@@ -2366,6 +2366,10 @@ func _align_control_tick(marker: Control, row: Control) -> void:
 func _source_texture_rect(parent: Node, node_name: String, at: Vector2,
         dimensions: Vector2, texture: Texture2D = null) -> TextureRect:
     var rect := TextureRect.new()
+    # In dark mode the shared cursor holds its recoloured picture; recolouring
+    # that again leaves nothing visible, so new cursors start from the original.
+    if texture != null and is_instance_valid(source_command_cursor) and texture == source_command_cursor.texture:
+        texture = source_command_cursor.get_meta("tick_source", texture)
     rect.name = node_name
     rect.position = at
     rect.size = dimensions
@@ -6017,8 +6021,15 @@ func _play_source_mewtwo_intro() -> void:
             elapsed += get_process_delta_time()
             var target := mini(1708, int(elapsed * 60.0))
             while tick < target:
-                if speech.has(tick): _start_battle_text(String(speech[tick]))
+                # The battle screen is still hidden here: MEWTWO speaks to the
+                # player in front of its statue, so the words go in the
+                # overworld message box. Without them the wait looks frozen.
+                if speech.has(tick):
+                    _show_message(String(speech[tick]))
+                    message_timer = 999.0
                 tick += 1
+        message_panel.hide()
+        message_timer = 0.0
     else:
         world.environment_system.battle_music.seek(28.55)
     source_mewtwo_intro_seen = true
@@ -12208,7 +12219,14 @@ func _on_structure_action(action: String) -> void:
         await get_tree().create_timer((20.0 if pressed else 3.0) / 60.0).timeout
         if pressed:
             world.play_source_sound("enter1")
-            SourceMansionRuntime.press_switch(world, Vector2i(int(parts[1]), int(parts[2])))
+            var gates := {}
+            SourceMansionRuntime.press_switch(world, Vector2i(int(parts[1]), int(parts[2])), gates)
+            # In a shared world the gates move for every player, and the host
+            # records them so they stay that way for players who join later.
+            if is_instance_valid(coop_game) and coop_game.active and not gates.is_empty():
+                if not await coop_game.building.share_mutations(gates):
+                    SourceMansionRuntime.press_switch(world, Vector2i(int(parts[1]), int(parts[2])))
+                    _show_message("The switch would not move. Try again.")
         mansion_switch_open = false
         world.set_gameplay_enabled(not _field_ui_blocks_gameplay())
     elif action.begins_with("MANSION_LOCK:"):
@@ -12219,6 +12237,12 @@ func _on_structure_action(action: String) -> void:
         if parts.size() != 3:
             return
         var cell := Vector2i(int(parts[1]), int(parts[2]))
+        # In a shared world the opened door is opened for every player, and
+        # the host records it, so it stays open for players who join later.
+        if is_instance_valid(coop_game) and coop_game.active:
+            if not await coop_game.building.share_tile_change(cell, {"kind": "MANSION_DOOR"}):
+                _show_message("The door would not open. Try again.")
+                return
         if world.unlock_mansion_door(cell):
             inventory["SECRET KEY"] = int(inventory.get("SECRET KEY", 0)) - 1
             _show_message("The SECRET KEY opened the door!")
@@ -12428,6 +12452,9 @@ func _apply_touch_config_theme() -> void:
     _set_touch_config_colors(touch_config, Color.BLACK)
     _style_touch_config_buttons()
     _style_touch_config_sliders()
+    # The black ink above is set again each time the panel opens; give dark
+    # mode its light ink straight away instead of waiting for a redraw.
+    if is_instance_valid(dark_mode_ui): dark_mode_ui._walk(touch_config)
     if touch_config_scroll == null:
         # Keep every setting reachable on smaller screens and within cutouts.
         var contents := touch_config.get_node("VBox") as VBoxContainer

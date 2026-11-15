@@ -2,7 +2,7 @@ class_name SourceMansionRuntime
 extends RefCounted
 
 # Tile.onPressA / FlipDoorTile: a statue toggles its linked doors one plane below.
-static func press_switch(world, cell: Vector2i) -> int:
+static func press_switch(world, cell: Vector2i, changed: Dictionary = {}) -> int:
     var statue = world._source_interior_tile_at_world_cell(cell)
     if statue == null or statue.name != "pkmnmansion_statue1":
         return 0
@@ -30,6 +30,7 @@ static func press_switch(world, cell: Vector2i) -> int:
             var target := origin + local_cell
             set_gate(world, target, name)
             world.source_interior_mutations[world._cell_key(target)] = {"kind":"MANSION_GATE", "name":name}
+            changed[target] = {"kind":"MANSION_GATE", "name":name}
             count += 1
     return count
 

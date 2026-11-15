@@ -122,7 +122,7 @@ func _received(peer: int, payload: Dictionary) -> void:
         if not players.has(peer):
             if kind!="hello":_reject(peer,"Join handshake required.");return
             if payload.get("protocol")!=PROTOCOL:_reject(peer,"Game versions do not match.");return
-            if payload.get("mods")!=mod_digest:_reject(peer,"Enabled mods and their order must match the host.");return
+            if payload.get("mods")!=mod_digest:_reject(peer,"Mods that change how the game plays must match the host.");return
             if not access_proof.is_empty() and String(payload.get("access",""))!=access_proof:_reject(peer,"Wrong password.");return
             var token:=String(payload.get("identity",""))
             if token.length()!=64 or not token.is_valid_hex_number():_reject(peer,"Invalid player identity.");return

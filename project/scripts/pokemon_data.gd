@@ -160,6 +160,8 @@ static func texture(species: String, kind: String = "overworld", shiny: bool = f
     var legendary := preload("res://scripts/gen3_legendary_art.gd").texture(species, kind, shiny)
     if legendary != null: return legendary
     if shiny:
+        var community_shiny := preload("res://scripts/divinakra_mega_art.gd").texture(species, kind, true)
+        if community_shiny != null: return community_shiny
         return _shiny_texture(species, kind)
     var community := preload("res://scripts/divinakra_mega_art.gd").texture(species, kind)
     if community != null: return community

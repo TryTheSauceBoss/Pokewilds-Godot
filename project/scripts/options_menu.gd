@@ -32,7 +32,7 @@ const ROWS := [
     ["game_speed","GAME SPEED","Speed up gameplay, music and effects together."],
     ["text_speed","TEXT SPEED","Choose how quickly dialogue appears."],
     ["frame","FRAME","Choose a frame."],
-    ["swipe_menu","SWIPE MENU","Open controls, game files and modding."]]
+    ["swipe_menu","SAVE FILES AND MODS","Open game files, modding and touch controls."]]
 var menu_rows: Array = ROWS.duplicate(true)
 var main: Node
 var selection := 0
@@ -229,6 +229,8 @@ func handle(event: InputEvent) -> void:
     if event.is_action_pressed("confirm") and key=="controls":
         build_controls();controls_page=true;control_index=0;refresh();return
     if event.is_action_pressed("confirm") and key=="back":close();return
+    if event.is_action_pressed("confirm") and key=="swipe_menu":
+        close();main._close_game_menu();main._open_touch_config(true);return
     if event.is_action_pressed("confirm") and key=="players":
         players_page=true;kick_index=0;refresh();return
     direction=-1 if event.is_action_pressed("move_left") else 1 if event.is_action_pressed("move_right") or event.is_action_pressed("confirm") else 0

@@ -1913,6 +1913,15 @@ func _use_dig(cell: Vector2i) -> void:
 
 func _use_interior_interactable(action: String, cell: Vector2i = Vector2i.ZERO) -> void:
     var coordinator=get_parent().get("coop_game")
+    if action.to_upper().begins_with("ITEM:SECRET KEY:") and is_instance_valid(coordinator) and coordinator.active and not coordinator.hosting:
+        # A guest takes a key of their own and the key stays where it is: the
+        # world's key belongs to the host, so a guest cannot take it from them.
+        if int(get_parent().inventory.get("SECRET KEY", 0)) > 0:
+            world_message.emit("You already have the MANSION KEY.")
+        else:
+            item_collected.emit("SECRET KEY")
+            world_message.emit("You found the MANSION KEY!")
+        return
     if action.begins_with("ITEM:") and is_instance_valid(coordinator) and coordinator.active and not coordinator.building.collecting:
         coordinator.building.collect_item(action,cell)
         return
